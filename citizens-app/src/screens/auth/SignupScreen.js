@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import LocationPicker from '../../components/common/LocationPicker';
 import PasswordStrengthIndicator from '../../components/common/PasswordStrengthIndicator';
 import { theme } from '../../config/theme';
 import { useAuth } from '../../hooks/useAuth';
@@ -23,6 +24,8 @@ const SignupScreen = ({ navigation }) => {
     password: '',
     confirmPassword: '',
     homeAddress: '',
+    lat: null,
+    lng: null,
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -41,6 +44,15 @@ const SignupScreen = ({ navigation }) => {
     if (field === 'password') {
       setShowPasswordStrength(value.length > 0);
     }
+  };
+
+  const handleLocationChange = (location) => {
+    setFormData(prev => ({
+      ...prev,
+      homeAddress: location.address,
+      lat: location.latitude,
+      lng: location.longitude,
+    }));
   };
 
   const validateForm = () => {
@@ -97,6 +109,8 @@ const SignupScreen = ({ navigation }) => {
         password: formData.password,
         role: 'citizen',
         home_address: formData.homeAddress.trim() || undefined,
+        lat: formData.lat,
+        lng: formData.lng,
       };
 
       await signUp(userData);
@@ -174,13 +188,12 @@ const SignupScreen = ({ navigation }) => {
               error={errors.confirmPassword}
             />
 
-            <Input
-              label="Home Address (Optional)"
-              value={formData.homeAddress}
-              onChangeText={(value) => updateFormData('homeAddress', value)}
-              placeholder="Enter your home address"
-              multiline
-              numberOfLines={2}
+            <Text style={styles.locationLabel}>Home Address (Optional)</Text>
+            <LocationPicker
+              onLocationChange={handleLocationChange}
+              enableAutocomplete={false}
+              showMap={true}
+              mapHeight={200}
             />
 
             <Button
@@ -234,6 +247,12 @@ const styles = StyleSheet.create({
   },
   form: {
     width: '100%',
+  },
+  locationLabel: {
+    fontSize: theme.fonts.sizes.md,
+    fontWeight: theme.fonts.weights.semibold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
   },
   signupButton: {
     marginTop: theme.spacing.sm,

@@ -16,12 +16,22 @@ A React Native mobile application that enables citizens to report municipal issu
 - Track report status updates from municipal officials
 - View personal report history
 
-### 🗺️ Interactive Map
-- Display municipality boundaries using GeoJSON data
-- Show reported issues as markers on the map
-- Color-coded markers by report category
-- User location integration
+### 🗺️ Optimized Interactive Map
+- **Performance-optimized GeoJSON rendering** with ward boundaries
+- **Viewport-based filtering** to reduce rendering load on low-spec devices
+- **Simplified polygons** using simplify-geojson for better performance
+- **Cached GeoJSON data** with 24-hour expiry for faster loading
+- **Debounced map interactions** to prevent excessive API calls
+- Show reported issues as markers with color-coded categories
+- User location integration with GPS auto-detection
 
+### 📍 Advanced Location Handling
+- **Reusable LocationPicker component** used across multiple screens
+- **GPS auto-detection** with manual override options
+- **Interactive map marker placement** for precise location selection
+- **Address input with reverse geocoding** for user-friendly location entry
+- **Graceful fallbacks** when GPS or APIs are unavailable
+- Consistent UX across Report Issue, Profile, and Sign-Up screens
 ### 📱 Mobile-First Design
 - Clean, intuitive interface optimized for mobile devices
 - Responsive design that works on various screen sizes
@@ -33,7 +43,9 @@ A React Native mobile application that enables citizens to report municipal issu
 - **Framework**: React Native with Expo managed workflow
 - **Navigation**: React Navigation v6
 - **Authentication**: Supabase Auth with JWT tokens
-- **Maps**: React Native Maps
+- **Maps**: React Native Maps with react-native-maps-geojson
+- **Performance**: simplify-geojson for polygon optimization
+- **Caching**: AsyncStorage for GeoJSON data caching
 - **State Management**: React Hooks and Context API
 - **HTTP Client**: Fetch API with custom service layer
 - **UI Components**: Custom components with React Native Paper styling
@@ -47,12 +59,14 @@ A React Native mobile application that enables citizens to report municipal issu
 src/
 ├── components/          # Reusable UI components
 │   ├── common/         # Generic components (Button, Input, etc.)
+│   ├── maps/           # Map-specific components (OptimizedMapView)
 │   └── reports/        # Report-specific components
 ├── config/             # Configuration files
 │   ├── api.js         # API endpoints and constants
 │   └── supabase.js    # Supabase client configuration
 ├── hooks/              # Custom React hooks
 │   ├── useAuth.js     # Authentication hook
+│   ├── useGeoJSON.js  # GeoJSON data management hook
 │   ├── useLocation.js # Location services hook
 │   └── useReports.js  # Report management hooks
 ├── navigation/         # Navigation configuration
@@ -62,7 +76,36 @@ src/
 ├── screens/            # Screen components
 │   ├── auth/          # Authentication screens
 │   └── main/          # Main application screens
-└── services/           # API service layer
+├── services/           # API service layer
+│   ├── authService.js     # Authentication API calls
+│   ├── reportService.js   # Report management API calls
+│   ├── userService.js     # User profile API calls
+│   ├── municipalityService.js # Municipality data API calls
+│   └── locationService.js # Location services
+└── utils/              # Utility functions
+    └── geoUtils.js     # Geographic and performance utilities
+```
+
+## Performance Optimizations
+
+### Map Performance
+- **GeoJSON Simplification**: Polygons are simplified using configurable tolerance to reduce complexity
+- **Viewport Filtering**: Only render polygons visible in current map bounds
+- **Caching Strategy**: GeoJSON data cached locally with 24-hour expiry
+- **Debounced Interactions**: Map region changes and marker drags are debounced to prevent excessive processing
+- **Memory Management**: React.memo and useMemo used extensively to prevent unnecessary re-renders
+
+### Location Handling
+- **Graceful Degradation**: GPS → Manual Entry → Map Marker fallback chain
+- **Debounced Geocoding**: Reverse geocoding calls are debounced to reduce API usage
+- **Error Boundaries**: Comprehensive error handling prevents app crashes
+- **Performance Monitoring**: Distance calculations and coordinate transformations optimized
+
+### Low-End Device Support
+- **Reduced Polygon Complexity**: Configurable simplification tolerance
+- **Lazy Loading**: Components and data loaded on-demand
+- **Memory Optimization**: Efficient data structures and cleanup
+- **Fallback Strategies**: Alternative rendering modes for struggling devices
     ├── authService.js     # Authentication API calls
     ├── reportService.js   # Report management API calls
     ├── userService.js     # User profile API calls

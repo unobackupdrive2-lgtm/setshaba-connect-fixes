@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import LocationPicker from '../../components/common/LocationPicker';
 import { theme } from '../../config/theme';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorMessage from '../../components/common/ErrorMessage';
@@ -26,6 +27,8 @@ const ProfileScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({
     name: '',
     home_address: '',
+    lat: null,
+    lng: null,
   });
   const { signOut } = useAuth();
 
@@ -42,6 +45,8 @@ const ProfileScreen = ({ navigation }) => {
       setFormData({
         name: userData.name || '',
         home_address: userData.home_address || '',
+        lat: userData.lat,
+        lng: userData.lng,
       });
     } catch (err) {
       setError(err.message);
@@ -54,6 +59,15 @@ const ProfileScreen = ({ navigation }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleLocationChange = (location) => {
+    setFormData(prev => ({
+      ...prev,
+      home_address: location.address,
+      lat: location.latitude,
+      lng: location.longitude,
+    }));
+  };
+
   const handleSave = async () => {
     try {
       setUpdating(true);
@@ -64,6 +78,12 @@ const ProfileScreen = ({ navigation }) => {
       }
       if (formData.home_address !== profile.home_address) {
         updates.home_address = formData.home_address.trim();
+      }
+      if (formData.lat !== profile.lat) {
+        updates.lat = formData.lat;
+      }
+      if (formData.lng !== profile.lng) {
+        updates.lng = formData.lng;
       }
 
       if (Object.keys(updates).length === 0) {
@@ -86,6 +106,8 @@ const ProfileScreen = ({ navigation }) => {
     setFormData({
       name: profile.name || '',
       home_address: profile.home_address || '',
+      lat: profile.lat,
+      lng: profile.lng,
     });
     setIsEditing(false);
   };
@@ -163,13 +185,16 @@ const ProfileScreen = ({ navigation }) => {
                 placeholder="Enter your full name"
               />
 
-              <Input
-                label="Home Address"
-                value={formData.home_address}
-                onChangeText={(value) => updateFormData('home_address', value)}
-                placeholder="Enter your home address"
-                multiline
-                numberOfLines={2}
+              <LocationPicker
+                initialLocation={
+                  formData.lat && formData.lng
+                    ? { latitude: formData.lat, longitude: formData.lng }
+                    : null
+                }
+                onLocationChange={handleLocationChange}
+                enableAutocomplete={false}
+                showMap={true}
+                mapHeight={200}
               />
 
               <View style={styles.buttonContainer}>
@@ -200,6 +225,15 @@ const ProfileScreen = ({ navigation }) => {
                   {profile?.home_address || 'Not provided'}
                 </Text>
               </View>
+
+              {profile?.lat && profile?.lng && (
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>Coordinates</Text>
+                  <Text style={styles.infoValue}>
+                    {profile.lat.toFixed(6)}, {profile.lng.toFixed(6)}
+                  </Text>
+                </View>
+              )}
 
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Municipality</Text>

@@ -27,9 +27,11 @@
     "react-native": "0.81.4",
     "react-native-dotenv": "^3.4.11",
     "react-native-maps": "1.20.1",
+    "react-native-maps-geojson": "^1.0.0",
     "react-native-paper": "^5.14.5",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
+    "simplify-geojson": "^1.0.5",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-vector-icons": "^10.3.0"
   },

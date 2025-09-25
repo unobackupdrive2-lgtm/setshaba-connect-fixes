@@ -7,18 +7,15 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, Polygon } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../config/theme';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import ErrorMessage from '../../components/common/ErrorMessage';
+import OptimizedMapView from '../../components/maps/OptimizedMapView';
 import { useLocation } from '../../hooks/useLocation';
 import municipalityService from '../../services/municipalityService';
 import reportService from '../../services/reportService';
 import { REPORT_CATEGORIES } from '../../config/api';
 
 const MapScreen = ({ navigation }) => {
-  const [municipalities, setMunicipalities] = useState([]);
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,10 +35,6 @@ const MapScreen = ({ navigation }) => {
     try {
       setLoading(true);
       setError(null);
-
-      // Load municipalities with GeoJSON data
-      const municipalitiesData = await municipalityService.getMunicipalities(true);
-      setMunicipalities(municipalitiesData);
 
       // Load reports
       const reportsData = await reportService.getReports({ limit: 100 });
@@ -71,7 +64,6 @@ const MapScreen = ({ navigation }) => {
   };
 
   const getMarkerColor = (category) => {
-    const categoryData = REPORT_CATEGORIES.find(cat => cat.value === category);
     switch (category) {
       case 'water': return '#2196F3';
       case 'electricity': return '#FFC107';
@@ -82,76 +74,30 @@ const MapScreen = ({ navigation }) => {
     }
   };
 
-  const renderMunicipalityPolygons = () => {
-    return municipalities.map((municipality) => {
-      if (!municipality.bounds || !municipality.bounds.coordinates) {
-        return null;
-      }
+  // Convert reports to marker format
+  const reportMarkers = reports.map((report) => ({
+    id: report.id,
+    latitude: report.lat,
+    longitude: report.lng,
+    title: report.title,
+    description: report.description,
+    color: getMarkerColor(report.category),
+    data: report,
+  }));
 
-      try {
-        const coordinates = municipality.bounds.coordinates[0].map(coord => ({
-          latitude: coord[1],
-          longitude: coord[0],
-        }));
-
-        return (
-          <Polygon
-            key={municipality.id}
-            coordinates={coordinates}
-            strokeColor="#2196F3"
-            strokeWidth={2}
-            fillColor="rgba(33, 150, 243, 0.1)"
-          />
-        );
-      } catch (error) {
-        console.log('Error rendering polygon for municipality:', municipality.name);
-        return null;
-      }
-    });
+  const handleMarkerPress = (marker) => {
+    handleReportPress(marker.data);
   };
-
-  const renderReportMarkers = () => {
-    return reports.map((report) => (
-      <Marker
-        key={report.id}
-        coordinate={{
-          latitude: report.lat,
-          longitude: report.lng,
-        }}
-        title={report.title}
-        description={report.description}
-        pinColor={getMarkerColor(report.category)}
-        onCalloutPress={() => handleReportPress(report)}
-      />
-    ));
-  };
-
-  if (loading) {
-    return <LoadingSpinner message="Loading map data..." />;
-  }
-
-  if (error) {
-    return (
-      <ErrorMessage 
-        message={error} 
-        onRetry={loadMapData}
-        retryText="Retry"
-      />
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <MapView
+      <OptimizedMapView
         style={styles.map}
-        region={mapRegion}
-        onRegionChangeComplete={setMapRegion}
-        showsUserLocation={true}
-        showsMyLocationButton={true}
-      >
-        {renderMunicipalityPolygons()}
-        {renderReportMarkers()}
-      </MapView>
+        initialRegion={mapRegion}
+        markers={reportMarkers}
+        onMarkerPress={handleMarkerPress}
+        showWards={true}
+      />
 
       <View style={styles.legend}>
         <Text style={styles.legendTitle}>Report Categories</Text>

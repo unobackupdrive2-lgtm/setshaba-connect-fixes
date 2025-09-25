@@ -13,8 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import LocationPicker from '../../components/common/LocationPicker';
 import CategoryPicker from '../../components/reports/CategoryPicker';
-import { useLocation } from '../../hooks/useLocation';
 import reportService from '../../services/reportService';
 
 const CreateReportScreen = ({ navigation }) => {
@@ -26,36 +26,18 @@ const CreateReportScreen = ({ navigation }) => {
   });
   const [loading, setLoading] = useState(false);
   const [locationData, setLocationData] = useState(null);
-  const { getCurrentLocation, reverseGeocode } = useLocation();
 
-  useEffect(() => {
-    getLocationData();
-  }, []);
-
-  const getLocationData = async () => {
-    try {
-      const location = await getCurrentLocation();
-      const address = await reverseGeocode(location.latitude, location.longitude);
-      
-      setLocationData({
-        lat: location.latitude,
-        lng: location.longitude,
-        address,
-      });
-    } catch (error) {
-      Alert.alert(
-        'Location Error',
-        'Unable to get your location. Please ensure location permissions are enabled.',
-        [
-          { text: 'Cancel', onPress: () => navigation.goBack() },
-          { text: 'Retry', onPress: getLocationData },
-        ]
-      );
-    }
-  };
 
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleLocationChange = (location) => {
+    setLocationData({
+      lat: location.latitude,
+      lng: location.longitude,
+      address: location.address,
+    });
   };
 
   const pickImage = async () => {
@@ -222,15 +204,12 @@ const CreateReportScreen = ({ navigation }) => {
           onSelectCategory={(category) => updateFormData('category', category)}
         />
 
-        <View style={styles.locationContainer}>
-          <Text style={styles.label}>Location</Text>
-          <View style={styles.locationInfo}>
-            <Ionicons name="location-outline" size={20} color="#2196F3" />
-            <Text style={styles.locationText}>
-              {locationData ? locationData.address : 'Getting location...'}
-            </Text>
-          </View>
-        </View>
+        <LocationPicker
+          onLocationChange={handleLocationChange}
+          enableAutocomplete={false}
+          showMap={true}
+          mapHeight={250}
+        />
 
         <View style={styles.photoContainer}>
           <Text style={styles.label}>Photo (Optional)</Text>
@@ -295,24 +274,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 12,
-  },
-  locationContainer: {
-    marginBottom: 16,
-  },
-  locationInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  locationText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#333',
-    flex: 1,
   },
   photoContainer: {
     marginBottom: 24,
